@@ -9,6 +9,7 @@ CREATE OR REPLACE FUNCTION calendar_Test(
     V_DAY  VARCHAR2(31);
     V_err_msg varchar(255);
     V_err_num NUMBER;
+    v_num     INTEGER;
 /*    cursor cal_cur is
             select *
             from Calendar t
@@ -16,6 +17,10 @@ CREATE OR REPLACE FUNCTION calendar_Test(
             and t.year_month = I_year_month
             and t.kind = I_kind;*/
         BEGIN
+          begin
+          V_NUM :=  2/ 0;
+           EXCEPTION WHEN OTHERS THEN V_NUM := 1;
+           end;
       select t.Days into  V_DAY
             from Calendar t
             where t.country = I_country
