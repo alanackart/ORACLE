@@ -1,0 +1,128 @@
+select    1
+        FROM TEST_TABLE t1,  INFO_TABLE s
+        where t1.t_date = '20200906' AND
+        t1.partyId = rpad(trim('102346'), length(partyId), ' ') and
+        t1.t_date = s.t_date(+) and
+        t1.cus_number = s.cus_number(+) and
+        t1.mdsubtype = s.quote_type(+) and
+        trim(t1.routingtype) = s.routing_type(+) and
+        trim(t1.securityid) = s.security_id(+) and
+        t1.clordid in
+        (SELECT  max(t2.clordid) keep (dense_rank last order by t2.transacttime nulls first) 
+        FROM TEST_TABLE t2
+        WHERE t2.t_date =  '20200906'
+        AND t2.partyid = rpad(trim('102346'), length(partyId), ' ')
+        AND t2.mdsubtype = 117
+        AND t2.SENDSTATUS != 'W'
+        group by t2.securityid, t2.routingtype)
+        order by t1.transacttime desc
+		
+
+
+
+ Plan Hash Value  : 415532734 
+
+----------------------------------------------------------------------------------------------------------
+| Id   | Operation                           | Name                     | Rows | Bytes | Cost | Time     |
+----------------------------------------------------------------------------------------------------------
+|    0 | SELECT STATEMENT                    |                          |    1 |   680 |   11 | 00:00:01 |
+|    1 |   SORT ORDER BY                     |                          |    1 |   680 |   11 | 00:00:01 |
+|    2 |    NESTED LOOPS OUTER               |                          |    1 |   680 |   10 | 00:00:01 |
+|    3 |     NESTED LOOPS                    |                          |    1 |   535 |    9 | 00:00:01 |
+|    4 |      VIEW                           | VW_NSO_1                 |    3 |    36 |    6 | 00:00:01 |
+|    5 |       HASH UNIQUE                   |                          |    3 |   258 |    6 | 00:00:01 |
+|    6 |        SORT GROUP BY                |                          |    3 |   258 |    6 | 00:00:01 |
+|  * 7 |         TABLE ACCESS BY INDEX ROWID | TEST_TABLE        |    4 |   344 |    5 | 00:00:01 |
+|  * 8 |          INDEX RANGE SCAN           | TEST_TABLE_IDX1   |    5 |       |    2 | 00:00:01 |
+|  * 9 |      TABLE ACCESS BY INDEX ROWID    | TEST_TABLE        |    1 |   523 |    1 | 00:00:01 |
+| * 10 |       INDEX UNIQUE SCAN             | PK_TEST_TABLE     |    1 |       |    0 | 00:00:01 |
+|   11 |     TABLE ACCESS BY INDEX ROWID     | INFO_TABLE    |    1 |   145 |    1 | 00:00:01 |
+| * 12 |      INDEX UNIQUE SCAN              | PK_INFO_TABLE |    1 |       |    0 | 00:00:01 |
+----------------------------------------------------------------------------------------------------------
+
+Predicate Information (identified by operation id):
+------------------------------------------
+* 7 - filter("T2"."SENDSTATUS"<>'W')
+* 8 - access("T2"."T_DATE"='20200906' AND "T2"."MDSUBTYPE"=117)
+* 8 - filter("T2"."MDSUBTYPE"=117 AND "T2"."PARTYID"=RPAD('102346',LENGTH("PARTYID"),' '))
+* 9 - filter("T1"."PARTYID"=RPAD('102346',LENGTH("PARTYID"),' '))
+* 10 - access("T1"."T_DATE"='20200906' AND "T1"."CLORDID"="$kkqu_col_1")
+* 12 - access("S"."T_DATE"(+)='20200906' AND "T1"."CUS_NUMBER"="S"."CUS_NUMBER"(+) AND "T1"."MDSUBTYPE"="S"."QUOTE_TYPE"(+) AND "S"."ROUTING_TYPE"(+)=TRIM("T1"."ROUTINGTYPE") AND
+  "S"."SECURITY_ID"(+)=TRIM("T1"."SECURITYID"))
+  
+  
+  
+  
+  
+  
+  select 1
+
+        FROM TEST_TABLE t1,  INFO_TABLE s
+        where t1.t_date = '20200906' AND
+        t1.partyId = rpad(trim('102346'), length(partyId), ' ') and
+        t1.t_date = s.t_date(+) and
+        t1.cus_number = s.cus_number(+) and
+        t1.mdsubtype = s.quote_type(+) and
+        trim(t1.routingtype) = s.routing_type(+) and
+        trim(t1.securityid) = s.security_id(+) and
+        nvl(trim(t1.transacttime), '00') || trim(t1.clordid) in
+        (SELECT  max(nvl(trim(t2.transacttime), '00') || trim(t2.clordid))
+        FROM TEST_TABLE t2
+        WHERE t2.t_date =  '20200906'
+        AND t2.partyid = rpad(trim('102346'), length(partyId), ' ')
+        AND t2.mdsubtype = 117
+        AND t2.SENDSTATUS != 'W'
+        group by t2.securityid, t2.routingtype)
+        order by t1.transacttime desc
+		
+		
+		 Plan Hash Value  : 2345497590 
+
+----------------------------------------------------------------------------------------------------------
+| Id   | Operation                           | Name                     | Rows | Bytes | Cost | Time     |
+----------------------------------------------------------------------------------------------------------
+|    0 | SELECT STATEMENT                    |                          |    1 |   690 |   13 | 00:00:01 |
+|    1 |   SORT ORDER BY                     |                          |    1 |   690 |   13 | 00:00:01 |
+|    2 |    NESTED LOOPS OUTER               |                          |    1 |   690 |   12 | 00:00:01 |
+|  * 3 |     HASH JOIN                       |                          |    1 |   545 |   11 | 00:00:01 |
+|    4 |      VIEW                           | VW_NSO_1                 |    3 |    66 |    6 | 00:00:01 |
+|    5 |       HASH UNIQUE                   |                          |    3 |   258 |    6 | 00:00:01 |
+|    6 |        HASH GROUP BY                |                          |    3 |   258 |    6 | 00:00:01 |
+|  * 7 |         TABLE ACCESS BY INDEX ROWID | TEST_TABLE        |    4 |   344 |    5 | 00:00:01 |
+|  * 8 |          INDEX RANGE SCAN           | TEST_TABLE_IDX1   |    5 |       |    2 | 00:00:01 |
+|    9 |      TABLE ACCESS BY INDEX ROWID    | TEST_TABLE        |    6 |  3138 |    5 | 00:00:01 |
+| * 10 |       INDEX RANGE SCAN              | TEST_TABLE_IDX1   |    6 |       |    2 | 00:00:01 |
+|   11 |     TABLE ACCESS BY INDEX ROWID     | INFO_TABLE    |    1 |   145 |    1 | 00:00:01 |
+| * 12 |      INDEX UNIQUE SCAN              | PK_INFO_TABLE |    1 |       |    0 | 00:00:01 |
+----------------------------------------------------------------------------------------------------------
+
+Predicate Information (identified by operation id):
+------------------------------------------
+* 3 - access("$kkqu_col_1"=NVL(TRIM("T1"."TRANSACTTIME"),'00')||TRIM("T1"."CLORDID"))
+* 7 - filter("T2"."SENDSTATUS"<>'W')
+* 8 - access("T2"."T_DATE"='20200906' AND "T2"."MDSUBTYPE"=117)
+* 8 - filter("T2"."MDSUBTYPE"=117 AND "T2"."PARTYID"=RPAD('102346',LENGTH("PARTYID"),' '))
+* 10 - access("T1"."T_DATE"='20200906')
+* 10 - filter("T1"."PARTYID"=RPAD('102346',LENGTH("PARTYID"),' '))
+* 12 - access("S"."T_DATE"(+)='20200906' AND "T1"."CUS_NUMBER"="S"."CUS_NUMBER"(+) AND "T1"."MDSUBTYPE"="S"."QUOTE_TYPE"(+) AND "S"."ROUTING_TYPE"(+)=TRIM("T1"."ROUTINGTYPE") AND
+  "S"."SECURITY_ID"(+)=TRIM("T1"."SECURITYID"))
+		
+  
+  Predicate Information (identified by operation id):
+------------------------------------------
+* 7 - filter("T2"."SENDSTATUS"<>'W')
+
+* 8 - access("T2"."T_DATE"='20200906' AND "T2"."MDSUBTYPE"=117)
+
+* 8 - filter("T2"."MDSUBTYPE"=117 AND "T2"."PARTYID"=RPAD('102346',LENGTH("PARTYID"),' '))
+
+* 9 - filter("T1"."PARTYID"=RPAD('102346',LENGTH("PARTYID"),' '))
+
+* 10 - access("T1"."T_DATE"='20200906' AND "T1"."CLORDID"="$kkqu_col_1")
+
+
+* 12 - access("S"."T_DATE"(+)='20200906' AND "T1"."CUS_NUMBER"="S"."CUS_NUMBER"(+) AND "T1"."MDSUBTYPE"="S"."QUOTE_TYPE"(+) AND "S"."ROUTING_TYPE"(+)=TRIM("T1"."ROUTINGTYPE") AND
+  "S"."SECURITY_ID"(+)=TRIM("T1"."SECURITYID"))
+  
+  
+  
